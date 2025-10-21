@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
   <Plugin name="SDF" type="database" label="Self Describing Format"
-      version="1.5.15" enabled="true" mdspecificcode="false"
+      version="1.5.16" enabled="true" mdspecificcode="false"
       engspecificcode="false" onlyengine="false" noengine="false" dbtype="STMD"
       haswriter="false" hasoptions="true" filePatternsStrict="false"
       opensWholeDirectory="false">
