@@ -545,11 +545,16 @@ avtSDFFileFormat::PopulateDatabaseMetaData(avtDatabaseMetaData *md)
             sdf_block_t *gb, *sb;
             vector<string> blockNames, groupNames;
             vector<int> groupIds;
-            int ndims = 0;
+            int ndims = 0, gotGroups = 1;
 
             for (unsigned int ng = 0 ; ng < b->ndims ; ng++) {
+                gotGroups = 0;
                 gb = sdf_find_block_by_id(h, b->variable_ids[ng]);
                 groupNames.push_back(gb->name);
+                ndims = gb->ndims;
+                if (!gb->variable_ids)
+                    continue;
+                gotGroups = 1;
                 for (unsigned int n = 0 ; n < gb->ndims ; n++) {
                     sb = sdf_find_block_by_id(h, gb->variable_ids[n]);
                     ndims = sb->ndims;
@@ -563,22 +568,27 @@ avtSDFFileFormat::PopulateDatabaseMetaData(avtDatabaseMetaData *md)
 
             md->SetFormatCanDoDomainDecomposition(false);
 
-            mmd->groupTitle = b->id;
             mmd->hasSpatialExtents = false;
 
-            mmd->blockTitle = strdup(sb->name);
-            for (int i = 0 ; i < mmd->blockTitle.length() ; i++) {
-                if (mmd->blockTitle[i] == '/') {
-                    mmd->blockTitle.resize(i);
-                    break;
+            if (gotGroups) {
+                mmd->groupTitle = b->id;
+                mmd->blockTitle = strdup(sb->name);
+                for (int i = 0 ; i < mmd->blockTitle.length() ; i++) {
+                    if (mmd->blockTitle[i] == '/') {
+                        mmd->blockTitle.resize(i);
+                        break;
+                    }
                 }
+                mmd->groupIds = groupIds;
+                mmd->numGroups = groupNames.size();
+                mmd->groupNames = groupNames;
+                mmd->numBlocks = blockNames.size();
+                mmd->blockNames = blockNames;
+            } else {
+                mmd->numBlocks = groupNames.size();
+                mmd->blockNames = groupNames;
             }
 
-            mmd->groupIds = groupIds;
-            mmd->numGroups = groupNames.size();
-            mmd->groupNames = groupNames;
-            mmd->numBlocks = blockNames.size();
-            mmd->blockNames = blockNames;
             md->Add(mmd);
         } else if (b->blocktype == SDF_BLOCKTYPE_STITCHED && b->stagger == 12) {
 
@@ -592,9 +602,10 @@ avtSDFFileFormat::PopulateDatabaseMetaData(avtDatabaseMetaData *md)
             if (!b->variable_ids || !b->variable_ids[0]) continue;
             sdf_block_t *var = sdf_find_block_by_id(h, b->variable_ids[0]);
             if (!var) continue;
-            if (!var->variable_ids || !var->variable_ids[0]) continue;
-            var = sdf_find_block_by_id(h, var->variable_ids[0]);
-            if (!var) continue;
+            if (var->variable_ids && var->variable_ids[0]) {
+                var = sdf_find_block_by_id(h, var->variable_ids[0]);
+                if (!var) continue;
+            }
 
             avtScalarMetaData *smd = new avtScalarMetaData();
             smd->name = b->name;
@@ -693,6 +704,10 @@ avtSDFFileFormat::GetMesh(int domain, const char *meshname)
         for (unsigned int ng = 0 ; ng < b->ndims ; ng++) {
             gb = sdf_find_block_by_id(h, b->variable_ids[ng]);
             if (!gb) EXCEPTION1(InvalidVariableException, meshname);
+            if (!gb->variable_ids) {
+                b = sdf_find_block_by_id(h, b->variable_ids[index]);
+                break;
+            }
             if (index < gb->ndims) {
                 b = sdf_find_block_by_id(h, gb->variable_ids[index]);
                 if (!b) EXCEPTION1(InvalidVariableException, meshname);
@@ -1123,6 +1138,10 @@ avtSDFFileFormat::GetArray(int domain, const char *varname)
         for (unsigned int ng = 0 ; ng < b->ndims ; ng++) {
             gb = sdf_find_block_by_id(h, b->variable_ids[ng]);
             if (!gb) EXCEPTION1(InvalidVariableException, varname);
+            if (!gb->variable_ids) {
+                b = sdf_find_block_by_id(h, b->variable_ids[index]);
+                break;
+            }
             if (index < gb->ndims) {
                 b = sdf_find_block_by_id(h, gb->variable_ids[index]);
                 if (!b) EXCEPTION1(InvalidVariableException, varname);
