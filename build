@@ -210,12 +210,12 @@ SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH ON)' CMakeLists.txt > $tmpdir/tmp
       fi
       if [ $build_type -ne 2 ]; then
         build_cxx=$(grep CMAKE_CXX_COMPILER $setup \
-            | head -1 | cut -f2- -d\/ | cut -f1 -d\))
+            | grep '/' | head -1 | cut -f2- -d\/ | cut -f1 -d\))
         if [ -x $build_cxx ]; then
           export CXX=$build_cxx
         fi
         build_cc=$(grep CMAKE_C_COMPILER $setup \
-            | head -1 | cut -f2- -d\/ | cut -f1 -d\))
+            | grep '/' | head -1 | cut -f2- -d\/ | cut -f1 -d\))
         if [ -x $build_cc ]; then
           export CC=$build_cc
         fi
@@ -257,6 +257,10 @@ SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH ON)' CMakeLists.txt > $tmpdir/tmp
           grep -Fv -e cognomen_LIB_DEPENDS -e mpicom_LIB_DEPENDS \
               -e 'VISIT_PARALLEL ' $tmpdir/tmp > $tmpdir/$base
           rm $tmpdir/tmp
+        fi
+        if [ "`uname -m`"x = "arm64"x ]; then
+          sed '/DEPENDS / s/-\([0-9]\)/.\1/g' $tmpdir/$base > $tmpdir/tmp
+          mv $tmpdir/tmp $tmpdir/$base
         fi
         sed 's,\(INCLUDE(["]*\)'$f'\(["]*\),\1'$tmpdir/$base'\2,' \
             CMakeLists.txt > $tmpdir/tmp
