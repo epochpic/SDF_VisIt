@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<!-- Use this template when SDF_VisIt and SDF_C are subprojects of a CMake superproject -->
+  <Plugin name="SDF" type="database" label="Self Describing Format"
+      version="1.5.15" enabled="true" mdspecificcode="false"
+      engspecificcode="false" onlyengine="false" noengine="false" dbtype="STMD"
+      haswriter="false" hasoptions="true" filePatternsStrict="false"
+      opensWholeDirectory="false">
+    <FilePatterns>
+      *.sdf
+    </FilePatterns>
+    <Files components="M,E">
+      avtSDFFileFormat.C
+      avtSDFOptions.C
+      build_date.h
+      commit_info.h
+    </Files>
+    <CXXFLAGS>
+      -I${SDFC_INCLUDE_DIR}
+    </CXXFLAGS>
+    <LDFLAGS>
+      -L${SDFC_LIB_DIR}
+    </LDFLAGS>
+    <LIBS>
+      sdfc
+    </LIBS>
+    <Attribute name="" purpose="" persistent="true" keyframe="true"
+        exportAPI="" exportInclude="">
+    </Attribute>
+  </Plugin>
